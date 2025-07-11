@@ -157,6 +157,82 @@ def handle_callback_query(
     update.callback_query.answer()
     handle_user_message(update, tg_context, ButtonValues(update.callback_query.data))
 
+# helper to avoid code duplication
+def _show_reminder_edit_options(
+    reminder: Reminder, update: telegram.Update, command_data: dict
+):
+    """
+    Shows the menu with options to edit a specific reminder.
+    """
+    # keyboard for edit
+    button_list = [
+        [
+            telegram.InlineKeyboardButton(
+                load("manage_reminders_handler__edit_text_btn"),
+                callback_data=ButtonValues.MANAGE_REMINDERS__EDIT__TEXT.value,
+            )
+        ],
+        [
+            telegram.InlineKeyboardButton(
+                load("manage_reminders_handler__edit_datetime_btn"),
+                callback_data=ButtonValues.MANAGE_REMINDERS__EDIT__DATETIME.value,
+            )
+        ],
+        [
+            telegram.InlineKeyboardButton(
+                load("manage_reminders_handler__edit_title_btn"),
+                callback_data=ButtonValues.MANAGE_REMINDERS__EDIT__TITLE.value,
+            )
+        ],
+        [
+            telegram.InlineKeyboardButton(
+                load("manage_reminders_handler__edit_chat_btn"),
+                callback_data=ButtonValues.MANAGE_REMINDERS__EDIT__CHAT.value,
+            )
+        ],
+        [
+            (
+                telegram.InlineKeyboardButton(
+                    load("manage_reminders_handler__edit_suspend_btn"),
+                    callback_data=ButtonValues.MANAGE_REMINDERS__EDIT__SUSPEND.value,
+                )
+                if reminder.is_active
+                else telegram.InlineKeyboardButton(
+                    load("manage_reminders_handler__edit_resume_btn"),
+                    callback_data=ButtonValues.MANAGE_REMINDERS__EDIT__RESUME.value,
+                )
+            )
+        ],
+        [
+            (
+                telegram.InlineKeyboardButton(
+                    load("manage_reminders_handler__edit_poll_active_btn"),
+                    callback_data=ButtonValues.MANAGE_REMINDERS__DISABLE_POLL.value,
+                )
+                if reminder.send_poll
+                else telegram.InlineKeyboardButton(
+                    load("manage_reminders_handler__edit_poll_inactive_btn"),
+                    callback_data=ButtonValues.MANAGE_REMINDERS__ENABLE_POLL.value,
+                )
+            )
+        ],
+    ]
+    reply_markup = telegram.InlineKeyboardMarkup(button_list)
+    weekday_str = calendar.TextCalendar().formatweekday(int(reminder.weekday), 15).strip()
+    reply(
+        load(
+            "manage_reminders_handler__weekly_reminder",
+            weekday=weekday_str,
+            time=reminder.time,
+            text=reminder.text,
+        ),
+        update,
+        reply_markup=reply_markup,
+    )
+    set_next_action(
+        command_data, PlainTextUserAction.MANAGE_REMINDERS__CHOOSE_EDIT_ACTION
+    )
+
 
 # helper to avoid code duplication
 def _show_reminder_edit_options(

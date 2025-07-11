@@ -117,3 +117,4 @@ class GoogleSheetsClient(Singleton):
         except Exception as e:
             logger.error(f"Failed to access sheet {sheet_key}", exc_info=e)
             raise
+        
